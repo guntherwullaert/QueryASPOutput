@@ -2,13 +2,15 @@ from clingo.control import Control
 from clingo.symbol import Number, Symbol
 import re
 
+# TODO: Change models list to list of sets and create the diff function
+
 class QueryApp:
     def __init__(self):
         self.models = []
         self.has_run = False
 
     def on_model(self, model):
-        self.models.append(model.symbols(atoms=True))
+        self.models.append(model.symbols(shown=True))
 
     def check_for_run(self):
         if(not self.has_run): 
@@ -32,7 +34,15 @@ class QueryApp:
             return
 
         for i in range(len(self.models)):
-            print("{} - {}".format(i, self.models[i]))
+            print("{}: ".format(i), end = '')
+            line = ""
+            for model in self.models[i]:
+                line += str(model) + ", "
+            
+            if len(self.models[i]) > 0:
+                line = line[:-2]
+            
+            print(line)
 
     def brave_atoms(self):
         if(self.check_for_run()):
@@ -71,6 +81,40 @@ class QueryApp:
 
         for atom in cautious_atoms:
             print(atom)
+
+    def diff(self):
+        if(self.check_for_run()):
+            return
+
+        print("{}: ".format(0), end = '')
+        line = ""
+        for model in self.models[0]:
+            line += str(model) + ", "
+        
+        if len(self.models[0]) > 0:
+            line = line[:-2]
+        
+        print(line)
+
+        set_model_1 = set(self.models[0])
+        for i in range(1, len(self.models)):
+            print("{}: ".format(i))
+            set_model_i = set(self.models[i])
+            gained_atom = set_model_i.difference(set_model_1)
+            lost_atom = set_model_1.difference(set_model_i)
+            line = ""
+            for atom in gained_atom:
+                line += str(atom) + ", "
+            if len(gained_atom) > 0:
+                line = line[:-2]
+            print(f"\033[92m(+{len(gained_atom)}) {line}\033[0m")
+            line = ""
+            for atom in lost_atom:
+                line += str(atom) + ", "
+            if len(lost_atom) > 0:
+                line = line[:-2]
+            print(f"\033[91m(-{len(lost_atom)}) {line}\033[0m")
+
 
     def clingo_constraint(self, constraint):
         if(self.check_for_run()):
@@ -143,3 +187,6 @@ if __name__ == "__main__":
         
         if(command == "cautious"):
             Q.cautious_atoms()
+
+        if(command == "diff"):
+            Q.diff()

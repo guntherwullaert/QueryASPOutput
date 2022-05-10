@@ -5,4 +5,4 @@ d :- b.
 :- d, a.
 
 q :- a,c.
-z.
+z(test).
